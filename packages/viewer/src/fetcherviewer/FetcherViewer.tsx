@@ -5,6 +5,8 @@ import {
   ViewTableActionColumn,
   ViewState,
   Viewer,
+  useRefreshDataEventBus,
+  TopbarActionsCapable,
 } from '../';
 import {
   useViewerDefinition,
@@ -14,13 +16,24 @@ import {
   EditView,
   ViewCommandClient,
 } from './';
-import { useCallback, useMemo } from 'react';
+import {
+  RefAttributes,
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+} from 'react';
 import { CommandResult, Condition, FieldSort } from '@ahoo-wang/fetcher-wow';
 import { fetcherRegistrar, TextResultExtractor } from '@ahoo-wang/fetcher';
 
-export interface FetcherViewerProps<
-  RecordType,
-> extends ViewTableSettingCapable {
+export interface FetcherViewerRef {
+  refreshData: () => void;
+}
+
+export interface FetcherViewerProps<RecordType>
+  extends
+    ViewTableSettingCapable,
+    RefAttributes<FetcherViewerRef>,
+    TopbarActionsCapable<RecordType> {
   viewerDefinitionId: string;
   ownerId?: string;
   tenantId?: string;
@@ -46,6 +59,7 @@ export function FetcherViewer<RecordType = any>({
   ...props
 }: FetcherViewerProps<RecordType>) {
   const {
+    ref,
     viewerDefinitionId,
     defaultViewId,
     pagination,
@@ -54,6 +68,9 @@ export function FetcherViewer<RecordType = any>({
     enableRowSelection,
     onSwitchView,
     viewTableSetting,
+    primaryAction,
+    secondaryActions,
+    batchActions,
   } = props;
 
   const {
@@ -163,6 +180,12 @@ export function FetcherViewer<RecordType = any>({
     [],
   );
 
+  const { publish } = useRefreshDataEventBus();
+
+  useImperativeHandle<FetcherViewerRef, FetcherViewerRef>(ref, () => ({
+    refreshData: publish,
+  }));
+
   if (definitionLoading || viewsLoading) {
     return (
       <div
@@ -205,6 +228,9 @@ export function FetcherViewer<RecordType = any>({
         actionColumn={actionColumn}
         onClickPrimaryKey={onClickPrimaryKey}
         enableRowSelection={enableRowSelection}
+        primaryAction={primaryAction}
+        secondaryActions={secondaryActions}
+        batchActions={batchActions}
         onGetRecordCount={onGetRecordCount}
         onSwitchView={handleSwitchView}
         onLoadData={handleLoadData}
