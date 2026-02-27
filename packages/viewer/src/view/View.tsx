@@ -22,14 +22,19 @@ import {
 } from '../filter';
 import type * as React from 'react';
 import { Condition, FieldSort, PagedList } from '@ahoo-wang/fetcher-wow';
-import { RefAttributes, useEffect, useImperativeHandle, useRef } from 'react';
+import {
+  RefAttributes,
+  useCallback,
+  useImperativeHandle,
+  useRef,
+} from 'react';
 import { FieldDefinition, ViewColumn } from '../viewer';
 import { ViewTable, ViewTableActionColumn, ViewTableRef } from '../table';
 import {
   PrimaryKeyClickHandlerCapable,
   ViewTableSettingCapable,
 } from '../types';
-import { SorterResult, SortOrder } from 'antd/es/table/interface';
+import { SorterResult } from 'antd/es/table/interface';
 import { useViewState, ViewChangeAction } from './';
 import { SizeType } from 'antd/es/config-provider/SizeContext';
 import { useLocale } from '../locale';
@@ -312,26 +317,20 @@ export function View<RecordType>({
       }
     }
 
-    const newColumns = columns.map(column => {
-      const temp = finalSorter.find(it => it.field == column.name);
-      return temp
-        ? {
-            ...column,
-            sortOrder: (temp.direction === 'ASC'
-              ? 'ascend'
-              : 'descend') as SortOrder,
-          }
-        : { ...column, sortOrder: null };
-    });
-
     setSorter(finalSorter);
-    setColumns(newColumns);
   };
 
   /** Ref for accessing EditableFilterPanel imperative methods (reset) */
   const editableFilterPanelRef = useRef<FilterPanelRef | null>(null);
   /** Ref for accessing ViewTable imperative methods (reset, clearSelectedRowKeys) */
   const viewTableRef = useRef<ViewTableRef | null>(null);
+
+  /** Clears all selected row keys. Called via ref imperatively. */
+  const clearSelectedRowKeysFn = useCallback(() => {
+    viewTableRef.current?.clearSelectedRowKeys();
+    onSelectedDataChange?.([]);
+    updateSelectedCount(0);
+  }, [onSelectedDataChange, updateSelectedCount]);
 
   /**
    * Resets all view state to default values.
@@ -340,12 +339,7 @@ export function View<RecordType>({
   const resetFn = () => {
     // reset();
     editableFilterPanelRef.current?.reset();
-    viewTableRef.current?.reset();
-  };
-
-  /** Clears all selected row keys. Called via ref imperatively. */
-  const clearSelectedRowKeysFn = () => {
-    viewTableRef.current?.clearSelectedRowKeys();
+    clearSelectedRowKeysFn();
   };
 
   /**
@@ -358,9 +352,9 @@ export function View<RecordType>({
     reset: resetFn,
   }));
 
-  useEffect(() => {
-    clearSelectedRowKeysFn();
-  }, [dataSource]);
+  // useEffect(() => {
+  //   clearSelectedRowKeysFn();
+  // }, [dataSource, clearSelectedRowKeysFn]);
 
   /**
    * Renders the view component.
