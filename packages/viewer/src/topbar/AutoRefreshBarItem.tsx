@@ -13,7 +13,7 @@ export interface AutoRefreshItem {
 
 export interface AutoRefreshBarItemProps {
   items?: AutoRefreshItem[];
-  activeViewId: string;
+  viewId: string;
 }
 
 const DefaultAutoRefreshItems = [
@@ -49,7 +49,7 @@ const localAutoRefreshViewIdStorage = new KeyStorage<
 
 export function AutoRefreshBarItem({
   items = DefaultAutoRefreshItems,
-  activeViewId,
+  viewId,
 }: AutoRefreshBarItemProps) {
   const [localAutoRefreshViewId, setLocalAutoRefreshViewId] = useKeyStorage<
     Record<string, AutoRefreshItem>
@@ -58,7 +58,7 @@ export function AutoRefreshBarItem({
   const finalItems = [...items, NeverRefreshItem];
 
   const selectedItem: AutoRefreshItem =
-    localAutoRefreshViewId?.[activeViewId] ?? NeverRefreshItem;
+    localAutoRefreshViewId?.[viewId] ?? NeverRefreshItem;
 
   const intervalIdRef = useRef<number | null>(null);
 
@@ -70,7 +70,7 @@ export function AutoRefreshBarItem({
     if (item) {
       setLocalAutoRefreshViewId({
         ...localAutoRefreshViewId,
-        [activeViewId]: item,
+        [viewId]: item,
       });
     }
   };
