@@ -245,7 +245,7 @@ export function TopBar<RecordType>(props: TopBarProps<RecordType>) {
           <ShareLinkBarItem />
           <FullscreenBarItem target={fullscreenTarget} />
           <Divider orientation="vertical" />
-          <AutoRefreshBarItem activeViewId={activeView.id} />
+          <AutoRefreshBarItem viewId={activeView.id} />
           {batchActions?.enabled && (
             <>
               <Divider orientation="vertical" />
